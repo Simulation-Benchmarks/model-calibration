@@ -1,0 +1,2 @@
+parameter,E_hat,bounds,weighted,n_obs,objective_value,rmse_MPa,max_abs_resid_MPa,E_unconstrained,E_optimizer,bound_active,optimizer_success
+E,141949.46894917716,"[50000.0, 400000.0]",True,102,7716.375078524468,22.61413221400295,47.949682518776655,141949.46894917716,141949.46894917716,False,True
