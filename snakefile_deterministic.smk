@@ -5,8 +5,7 @@
 #                                             tanh_specimen_metadata.json}
 #   process_observed_data   ->  data_processing/output/{tanh_specimen_cube_observed.csv,
 #                                                       tanh_specimen_cylinder_observed.csv}
-#   deterministic_fit       ->  inverse_problem/deterministic/output/{tanh_specimen_calibration.json,
-#                                                                     tanh_specimen_calibration.csv}
+#   deterministic_fit       ->  inverse_problem/deterministic/output/tanh_specimen_calibration.json
 #   deterministic_postprocess -> post_processing/deterministic/output/tanh_specimen_calibration.png
 #
 # The probabilistic (emcee) pipeline lives in snakefile_probabilistic.smk:
@@ -41,16 +40,13 @@ OBSERVED_FILES = [
     f"{OBSERVED_DIR}/tanh_specimen_cube_observed.csv",
     f"{OBSERVED_DIR}/tanh_specimen_cylinder_observed.csv",
 ]
-FIT_FILES = [
-    f"{RESULT_DIR}/tanh_specimen_calibration.json",
-    f"{RESULT_DIR}/tanh_specimen_calibration.csv",
-]
+FIT_FILE = f"{RESULT_DIR}/tanh_specimen_calibration.json"
 FIG_FILE = f"{POST_DIR}/tanh_specimen_calibration.png"
 
 
 rule all:
     input:
-        FIT_FILES + [FIG_FILE]
+        [FIT_FILE, FIG_FILE]
 
 
 rule generate_data:
@@ -75,7 +71,7 @@ rule deterministic_fit:
         data=OBSERVED_FILES,
         meta=META_FILE,
     output:
-        FIT_FILES
+        FIT_FILE
     shell:
         "{PYTHON} inverse_problem/deterministic/tanh_specimen_calibration.py"
 
@@ -84,7 +80,7 @@ rule deterministic_postprocess:
     input:
         data=OBSERVED_FILES,
         meta=META_FILE,
-        result=f"{RESULT_DIR}/tanh_specimen_calibration.csv",
+        result=FIT_FILE,
     output:
         FIG_FILE
     shell:

@@ -17,17 +17,17 @@ known observation variance folded in by load_data, matching the noise model used
 by the Bayesian script) and w_i = 1 otherwise. J is quadratic in E, so the
 unconstrained minimiser is closed-form,
 
-    E_hat_unc = sum_i w_i eps_i sigma_obs,i / sum_i w_i eps_i ** 2
+    E_optimised_unc = sum_i w_i eps_i sigma_obs,i / sum_i w_i eps_i ** 2
 
 and the constrained answer is that value clipped to the box (also verified with
-a bounded 1-D optimiser). Results are written as JSON + a one-row CSV to this
-stage's output/ directory; there is no chain and no posterior.
+a bounded 1-D optimiser). The fitted modulus is written as JSON
+(``{"E_optimised": ...}``) to this stage's output/ directory; there is no chain
+and no posterior.
 
 Run with the `embedded_bias_inference` conda env.
 """
 
 import argparse
-import csv
 import json
 import os
 import sys
@@ -45,7 +45,6 @@ DEFAULT_DATA_DIR = os.path.join(ROOT, "data_processing", "output")
 DEFAULT_META_DIR = os.path.join(ROOT, "data", "output")  # DGP metadata (single copy)
 DEFAULT_RESULT_DIR = os.path.join(SCRIPT_DIR, "output")
 RESULT_FILE = "tanh_specimen_calibration.json"
-RESULT_CSV = "tanh_specimen_calibration.csv"
 
 
 def load_det_config(path):
@@ -75,7 +74,7 @@ def misfit(E, eps, sigma_obs, w):
 
 
 def fit_E(eps, sigma_obs, w, bounds):
-    """Minimise the misfit over E in `bounds`; return (E_hat, diagnostics)."""
+    """Minimise the misfit over E in `bounds`; return (E_optimised, diagnostics)."""
     lo, hi = bounds
 
     # J(E) is quadratic in E -> closed-form unconstrained minimiser.
@@ -115,39 +114,18 @@ def main():
     weighted = cfg["objective"]["weighted"]
     w = 1.0 / data.svar if weighted else np.ones_like(data.svar)
 
-    E_hat, diag = fit_E(data.eps, data.sigma_obs, w, bounds)
+    E_optimised, _ = fit_E(data.eps, data.sigma_obs, w, bounds)
 
-    n = data.eps.size
-    resid = data.sigma_obs - E_hat * data.eps
-    result = {
-        "parameter": cfg["parameter"]["name"],
-        "E_hat": E_hat,
-        "bounds": list(bounds),
-        "weighted": weighted,
-        "n_obs": int(n),
-        "objective_value": misfit(E_hat, data.eps, data.sigma_obs, w),
-        "rmse_MPa": float(np.sqrt(np.mean(resid**2))),
-        "max_abs_resid_MPa": float(np.max(np.abs(resid))),
-        **diag,
-    }
+    result = {"E_optimised": E_optimised}
 
     out_path = os.path.join(args.result_dir, RESULT_FILE)
     with open(out_path, "w") as fh:
         json.dump(result, fh, indent=2)
         fh.write("\n")
 
-    # Same scalars as a one-row CSV (a header row + a values row) so the
-    # post-processing plot can load the fitted E without touching the JSON.
-    csv_path = os.path.join(args.result_dir, RESULT_CSV)
-    with open(csv_path, "w", newline="") as fh:
-        w = csv.writer(fh)
-        w.writerow(result.keys())
-        w.writerow(result.values())
-
     for k, v in result.items():
         print(f"{k:>20}: {v}")
     print(f"Wrote {out_path}")
-    print(f"Wrote {csv_path}")
 
 
 if __name__ == "__main__":

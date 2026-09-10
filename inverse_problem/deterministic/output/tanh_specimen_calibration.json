@@ -1,17 +1,3 @@
 {
-  "parameter": "E",
-  "E_hat": 141949.46894917716,
-  "bounds": [
-    50000.0,
-    400000.0
-  ],
-  "weighted": true,
-  "n_obs": 102,
-  "objective_value": 7716.375078524468,
-  "rmse_MPa": 22.61413221400295,
-  "max_abs_resid_MPa": 47.949682518776655,
-  "E_unconstrained": 141949.46894917716,
-  "E_optimizer": 141949.46894917716,
-  "bound_active": false,
-  "optimizer_success": true
+  "E_optimised": 141949.46894917716
 }
