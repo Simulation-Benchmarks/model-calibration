@@ -1,0 +1,9 @@
+{
+  "parameter": {
+    "name": "E",
+    "bounds": [50000.0, 400000.0]
+  },
+  "objective": {
+    "weighted": true
+  }
+}

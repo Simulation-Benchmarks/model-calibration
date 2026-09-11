@@ -1,0 +1,54 @@
+name: deterministic inference pipeline
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash -el {0}          # login shell so the conda env stays active
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yml
+          activate-environment: inference_benchmark
+          miniforge-version: latest
+          auto-activate-base: false
+
+      - name: Run deterministic Snakemake pipeline
+        run: snakemake -s snakefile_deterministic.smk --cores 1 --config python=python
+
+      - name: Upload generated data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deterministic-data
+          path: |
+            data/output/
+            data_processing/output/
+          if-no-files-found: error
+
+      - name: Upload inference outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deterministic-inference-outputs
+          path: inverse_problem/deterministic/output/
+          if-no-files-found: error
+
+      - name: Upload post-processing outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deterministic-postprocess-outputs
+          path: post_processing/deterministic/output/
+          if-no-files-found: error

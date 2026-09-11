@@ -1,0 +1,23 @@
+# Conda environment for the tanh-specimen calibration pipeline.
+#
+#   conda env create -f environment.yml
+#   conda activate inference_benchmark
+#   snakemake --cores 1 --config python=python
+#
+# The `--config python=python` override points every Snakefile rule at this
+# env's interpreter instead of the hard-coded `embedded_bias_inference` path.
+name: inference_benchmark
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy=2.4
+  - scipy=1.17
+  - matplotlib-base=3.10
+  - h5py=3.13
+  - emcee=3.1
+  - corner=2.2
+  - tqdm=4.67          # emcee progress bar
+  - pip
+  - pip:
+      - snakemake==9.23.*
