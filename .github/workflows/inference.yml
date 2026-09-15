@@ -33,7 +33,7 @@ jobs:
 
       - name: Upload generated data
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.inference_mode }}-data
           path: |
@@ -43,7 +43,7 @@ jobs:
 
       - name: Upload inference outputs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.inference_mode }}-inference-outputs
           path: inverse_problem/${{ matrix.inference_mode }}/output/
@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload post-processing outputs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.inference_mode }}-postprocess-outputs
           path: post_processing/${{ matrix.inference_mode }}/output/
