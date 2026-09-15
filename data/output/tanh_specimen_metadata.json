@@ -1,0 +1,11 @@
+{
+  "geometric_parameters": {
+    "L_mm": 10.0,
+    "A_cube_mm2": 100.0,
+    "A_cyl_mm2": 78.54
+  },
+  "measurement_noise": {
+    "sigma_N_cube_N": 260.0,
+    "sigma_N_cyl_N": 204.204
+  }
+}

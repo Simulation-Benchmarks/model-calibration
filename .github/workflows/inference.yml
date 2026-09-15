@@ -1,0 +1,58 @@
+name: inference pipeline
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        inference_mode: [deterministic, probabilistic]
+    defaults:
+      run:
+        shell: bash -el {0}          # login shell so the conda env stays active
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up conda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yml
+          activate-environment: inference_benchmark
+          miniforge-version: latest
+          auto-activate-base: false
+
+      - name: Run ${{ matrix.inference_mode }} Snakemake pipeline
+        run: snakemake --cores 1 --config inference_mode=${{ matrix.inference_mode }}
+
+      - name: Upload generated data
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.inference_mode }}-data
+          path: |
+            data/output/
+            data_processing/output/
+          if-no-files-found: error
+
+      - name: Upload inference outputs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.inference_mode }}-inference-outputs
+          path: inverse_problem/${{ matrix.inference_mode }}/output/
+          if-no-files-found: error
+
+      - name: Upload post-processing outputs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.inference_mode }}-postprocess-outputs
+          path: post_processing/${{ matrix.inference_mode }}/output/
+          if-no-files-found: error

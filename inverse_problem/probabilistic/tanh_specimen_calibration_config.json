@@ -1,0 +1,25 @@
+{
+  "parameters": [
+    {
+      "name": "mu_E",
+      "prior": "lognormal",
+      "moments": {
+        "mean": 12.206,
+        "std": 0.5
+      }
+    },
+    {
+      "name": "sigma_E",
+      "prior": "halfnormal",
+      "moments": {
+        "std": 30000.0
+      }
+    }
+  ],
+  "sampler": {
+    "nwalkers": 32,
+    "nsteps": 6000,
+    "discard": 2000,
+    "seed": 20260908
+  }
+}
