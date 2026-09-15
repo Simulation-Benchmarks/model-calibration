@@ -1,13 +1,13 @@
 # Commands
 
-All scripts run with the `embedded_bias_inference` conda env. Set a shortcut:
+All scripts run with the `inference_benchmark` conda env (see `environment.yml`):
 
 ```bash
-PY=/home/dtyagi/miniconda3/envs/embedded_bias_inference/bin/python
-cd /home/dtyagi/inference_benchmark
+conda env create -f environment.yml   # first time only
+conda activate inference_benchmark
 ```
 
-(or `conda activate embedded_bias_inference` and use `python` directly.)
+The commands below use `python` directly, assuming that env is activated.
 
 There are two calibration pipelines that share the first two stages:
 
@@ -44,7 +44,7 @@ minimising the (optionally noise-weighted) sum of squared residuals.
 ## 1. Generate the synthetic datasets
 
 ```bash
-$PY data/tanh_specimen_dgp.py
+python data/tanh_specimen_dgp.py
 ```
 
 Writes `data/output/tanh_specimen_cube.csv`,
@@ -66,7 +66,7 @@ script, not CLI flags.
 ## 2. Pre-process into calibration observations (shared)
 
 ```bash
-$PY data_processing/process_observed_data.py
+python data_processing/process_observed_data.py
 ```
 
 Reads the raw CSVs + `data/output/tanh_specimen_metadata.json` and writes, to
@@ -89,7 +89,7 @@ Options:
 ## 3a. Probabilistic: sample the posterior (emcee)
 
 ```bash
-$PY inverse_problem/probabilistic/tanh_specimen_calibration.py
+python inverse_problem/probabilistic/tanh_specimen_calibration.py
 ```
 
 Reads the observation CSVs +
@@ -117,7 +117,7 @@ command line. Priors: `μ_E ~ LogNormal` (config `mean`/`std` = moments of
 ## 3b. Probabilistic: post-process (summary + figures)
 
 ```bash
-$PY post_processing/probabilistic/tanh_specimen_postprocess.py
+python post_processing/probabilistic/tanh_specimen_postprocess.py
 ```
 
 Reads the `.h5` + observation CSVs + config and writes to
@@ -142,7 +142,7 @@ Options:
 ## 4a. Deterministic: fit a single modulus
 
 ```bash
-$PY inverse_problem/deterministic/tanh_specimen_calibration.py
+python inverse_problem/deterministic/tanh_specimen_calibration.py
 ```
 
 Reads the observation CSVs +
@@ -151,8 +151,7 @@ Reads the observation CSVs +
 misfit over `E` in the box, and writes to
 `inverse_problem/deterministic/output/`:
 
-- `tanh_specimen_calibration.json` — `E_hat`, bounds, objective value, RMSE, diagnostics
-- `tanh_specimen_calibration.csv` — the same scalars as a one-row CSV (for the plot)
+- `tanh_specimen_calibration.json` — `{"E_optimised": ...}`
 
 Options:
 
@@ -168,10 +167,10 @@ Options:
 ## 4b. Deterministic: post-process (figure)
 
 ```bash
-$PY post_processing/deterministic/tanh_specimen_postprocess.py
+python post_processing/deterministic/tanh_specimen_postprocess.py
 ```
 
-Reads `tanh_specimen_calibration.csv` + the observation CSVs and writes
+Reads `tanh_specimen_calibration.json` + the observation CSVs and writes
 `post_processing/deterministic/output/tanh_specimen_calibration.png` (measured
 points + fitted `σ = E_hat·ε` line). Nothing is re-fitted.
 
@@ -181,52 +180,51 @@ Options:
 |---|---|---|
 | `--data-dir DIR` | `data_processing/output` | directory holding the `*_observed.csv` |
 | `--meta-dir DIR` | `data/output` | directory holding `tanh_specimen_metadata.json` |
-| `--result-dir DIR` | `inverse_problem/deterministic/output` | directory holding `tanh_specimen_calibration.csv` |
+| `--result-dir DIR` | `inverse_problem/deterministic/output` | directory holding `tanh_specimen_calibration.json` |
 | `--output-dir DIR` | `post_processing/deterministic/output` | where to write the figure |
 
 ---
 
 ## Full pipelines via Snakemake
 
-The **probabilistic** pipeline is `snakefile_probabilistic.smk` (`generate_data →
-process_observed_data → sample_posterior → postprocess`, plus `all`); the
-**deterministic** pipeline is `snakefile_deterministic.smk` (`generate_data →
-process_observed_data → deterministic_fit → deterministic_postprocess`, plus
-`all`). Both share `generate_data` and `process_observed_data`. Run from the repo
-root:
+Both pipelines live in a single `Snakefile`, selected via `--config inference_mode=...`
+(default: `deterministic`). The **probabilistic** mode runs `generate_data →
+process_observed_data → sample_posterior → postprocess` (plus `all`); the
+**deterministic** mode runs `generate_data → process_observed_data →
+deterministic_fit → deterministic_postprocess` (plus `all`). Both share
+`generate_data` and `process_observed_data`. Run from the repo root:
 
 ```bash
-snakemake -s snakefile_probabilistic.smk --cores 1              # build what's missing / stale
-snakemake -s snakefile_probabilistic.smk --cores 1 --forceall   # force a clean rebuild
-snakemake -s snakefile_probabilistic.smk --cores 1 sample_posterior   # stop after a chosen rule
+snakemake --cores 1 --config inference_mode=probabilistic              # build what's missing / stale
+snakemake --cores 1 --config inference_mode=probabilistic --forceall   # force a clean rebuild
+snakemake --cores 1 --config inference_mode=probabilistic sample_posterior   # stop after a chosen rule
 
-snakemake -s snakefile_deterministic.smk --cores 1              # deterministic pipeline
-snakemake -s snakefile_deterministic.smk --cores 1 --forceall
+snakemake --cores 1 --config inference_mode=deterministic              # deterministic pipeline
+snakemake --cores 1 --config inference_mode=deterministic --forceall
 ```
 
-Rules call the `embedded_bias_inference` interpreter by default; override with
-`--config python=python`.
+Rules call `python`, so activate the `inference_benchmark` env first (see
+`environment.yml`).
 
 ## Full pipelines, from scratch (no Snakemake)
 
 ```bash
-PY=/home/dtyagi/miniconda3/envs/embedded_bias_inference/bin/python
-cd /home/dtyagi/inference_benchmark
+conda activate inference_benchmark
 
-$PY data/tanh_specimen_dgp.py
-$PY data_processing/process_observed_data.py
+python data/tanh_specimen_dgp.py
+python data_processing/process_observed_data.py
 
 # probabilistic
-$PY inverse_problem/probabilistic/tanh_specimen_calibration.py
-$PY post_processing/probabilistic/tanh_specimen_postprocess.py
+python inverse_problem/probabilistic/tanh_specimen_calibration.py
+python post_processing/probabilistic/tanh_specimen_postprocess.py
 
 # deterministic
-$PY inverse_problem/deterministic/tanh_specimen_calibration.py
-$PY post_processing/deterministic/tanh_specimen_postprocess.py
+python inverse_problem/deterministic/tanh_specimen_calibration.py
+python post_processing/deterministic/tanh_specimen_postprocess.py
 ```
 
 ## Inspect the stored posterior
 
 ```bash
-$PY -c "import emcee; b=emcee.backends.HDFBackend('inverse_problem/probabilistic/output/tanh_specimen_posterior.h5', read_only=True); print(b.get_chain().shape, b.get_log_prob().shape)"
+python -c "import emcee; b=emcee.backends.HDFBackend('inverse_problem/probabilistic/output/tanh_specimen_posterior.h5', read_only=True); print(b.get_chain().shape, b.get_log_prob().shape)"
 ```

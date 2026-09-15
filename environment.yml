@@ -2,13 +2,11 @@
 #
 #   conda env create -f environment.yml
 #   conda activate inference_benchmark
-#   snakemake --cores 1 --config python=python
-#
-# The `--config python=python` override points every Snakefile rule at this
-# env's interpreter instead of the hard-coded `embedded_bias_inference` path.
+#   snakemake --cores 1
 name: inference_benchmark
 channels:
   - conda-forge
+  - bioconda
 dependencies:
   - python=3.12
   - numpy=2.4
@@ -18,6 +16,4 @@ dependencies:
   - emcee=3.1
   - corner=2.2
   - tqdm=4.67          # emcee progress bar
-  - pip
-  - pip:
-      - snakemake==9.23.*
+  - snakemake=9.*

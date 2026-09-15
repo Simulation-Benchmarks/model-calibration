@@ -1,4 +1,4 @@
-name: deterministic inference pipeline
+name: inference pipeline
 
 on:
   push:
@@ -9,6 +9,10 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        inference_mode: [deterministic, probabilistic]
     defaults:
       run:
         shell: bash -el {0}          # login shell so the conda env stays active
@@ -24,14 +28,14 @@ jobs:
           miniforge-version: latest
           auto-activate-base: false
 
-      - name: Run deterministic Snakemake pipeline
-        run: snakemake -s snakefile_deterministic.smk --cores 1 --config python=python
+      - name: Run ${{ matrix.inference_mode }} Snakemake pipeline
+        run: snakemake --cores 1 --config inference_mode=${{ matrix.inference_mode }}
 
       - name: Upload generated data
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deterministic-data
+          name: ${{ matrix.inference_mode }}-data
           path: |
             data/output/
             data_processing/output/
@@ -41,14 +45,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deterministic-inference-outputs
-          path: inverse_problem/deterministic/output/
+          name: ${{ matrix.inference_mode }}-inference-outputs
+          path: inverse_problem/${{ matrix.inference_mode }}/output/
           if-no-files-found: error
 
       - name: Upload post-processing outputs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deterministic-postprocess-outputs
-          path: post_processing/deterministic/output/
+          name: ${{ matrix.inference_mode }}-postprocess-outputs
+          path: post_processing/${{ matrix.inference_mode }}/output/
           if-no-files-found: error

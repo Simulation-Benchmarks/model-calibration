@@ -41,11 +41,7 @@ SpecimenData = namedtuple(
 
 
 def load_config(path):
-    """Parse + validate the inference config JSON.
-
-    Returns the parsed dict with an extra ``"names"`` key holding the ordered
-    list of parameter names (the canonical theta order used everywhere else).
-    """
+    """Parse + validate the inference config JSON."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"config file not found: {path}")
     with open(path) as fh:
@@ -55,7 +51,6 @@ def load_config(path):
     if not params:
         raise ValueError(f"{path}: 'parameters' must be a non-empty list")
 
-    names = []
     for i, spec in enumerate(params):
         for key in ("name", "prior", "moments"):
             if key not in spec:
@@ -73,7 +68,6 @@ def load_config(path):
                     f"'{family}' needs moments{PRIOR_MOMENT_KEYS[family]}, "
                     f"missing '{mkey}'"
                 )
-        names.append(spec["name"])
 
     ndim = len(params)
 
@@ -92,7 +86,6 @@ def load_config(path):
             f"{path}: sampler.discard ({sampler['discard']}) must be < nsteps ({sampler['nsteps']})"
         )
 
-    cfg["names"] = names
     return cfg
 
 

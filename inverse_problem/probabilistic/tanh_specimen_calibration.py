@@ -86,12 +86,8 @@ def build_prior_dist(spec):
 def make_log_prior(param_specs):
     """Return a log_prior(theta) closure driven by the config parameter specs."""
     dists = [build_prior_dist(s) for s in param_specs]
-    positive_idx = [i for i, s in enumerate(param_specs) if s.get("positive")]
 
     def log_prior(theta):
-        for i in positive_idx:
-            if theta[i] <= 0.0:
-                return -np.inf
         return float(sum(d.logpdf(v) for d, v in zip(dists, theta)))
 
     return log_prior
@@ -129,9 +125,6 @@ def run_sampler(cfg, log_prob_fn, eps, sigma_obs, svar, backend_path):
     # Initialise each walker with an independent draw from the prior.
     dists = [build_prior_dist(spec) for spec in specs]
     p0 = np.column_stack([d.rvs(size=nwalkers, random_state=rng) for d in dists])
-    for i, spec in enumerate(specs):
-        if spec.get("positive"):
-            p0[:, i] = np.abs(p0[:, i])
 
     backend = emcee.backends.HDFBackend(backend_path)
     backend.reset(nwalkers, ndim)  # always resample

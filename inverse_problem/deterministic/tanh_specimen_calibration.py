@@ -78,9 +78,12 @@ def fit_E(eps, sigma_obs, w, bounds):
     lo, hi = bounds
 
     # J(E) is quadratic in E -> closed-form unconstrained minimiser.
-    a = float(np.sum(w * eps * eps))
-    b = float(np.sum(w * eps * sigma_obs))
-    E_unc = b / a
+    # Setting dJ/dE = 0 gives E = sum_i(w_i eps_i sigma_obs,i) / sum_i(w_i eps_i^2),
+    # the weighted least-squares solution for a one-parameter linear model
+    # with no intercept.
+    sum_w_eps2 = float(np.sum(w * eps * eps))
+    sum_w_eps_sigma = float(np.sum(w * eps * sigma_obs))
+    E_unc = sum_w_eps_sigma / sum_w_eps2
     E_clip = min(max(E_unc, lo), hi)
 
     # Independent check with a bounded 1-D optimiser.

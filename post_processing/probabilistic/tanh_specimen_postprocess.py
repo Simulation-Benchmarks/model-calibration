@@ -184,7 +184,7 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
-    names = cfg["names"]
+    names = [p["name"] for p in cfg["parameters"]]
     s = cfg["sampler"]
     data = load_data(args.data_dir, args.meta_dir)
     eps, sigma_obs, svar = data.eps, data.sigma_obs, data.svar
